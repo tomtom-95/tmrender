@@ -38,6 +38,14 @@ ColorTriangle(struct Vertex A,
               TGAImage &image,
               TGAColor color);
 
+struct Vector3D
+TriangleGetNormalVector(struct Vertex A,
+                        struct Vertex B,
+                        struct Vertex C);
+
+struct Vector3D
+NormalVectorNormalize(struct Vector3D normal_vector);
+
 
 int
 ScreenCoordsCheck(struct VertexBuffer vertex_buffer)
@@ -186,13 +194,6 @@ WireframeRender(struct VertexBuffer vertex_buffer,
         int vertex_idx_0 = (((face_buffer.data + i) -> vertex_indices)[0]) - 1;
         int vertex_idx_1 = (((face_buffer.data + i) -> vertex_indices)[1]) - 1;
         int vertex_idx_2 = (((face_buffer.data + i) -> vertex_indices)[2]) - 1;
-
-        if (i == 0)
-        {
-            printf("v0 = %i\n", vertex_idx_0);
-            printf("v1 = %i\n", vertex_idx_1);
-            printf("v2 = %i\n", vertex_idx_2);
-        }
         
         struct Vertex v0 = VertexDenormalize(vertex_buffer.data[vertex_idx_0]);
         struct Vertex v1 = VertexDenormalize(vertex_buffer.data[vertex_idx_1]);
@@ -229,6 +230,8 @@ ColorTriangle(struct Vertex A,
               TGAImage &image,
               TGAColor color)
 {
+    // TODO(tommaso): must get a bounding box for the triangle
+    //                now this is slow as fuck
     int edge = GetEdgeFunction(A, B, C);
     if (edge < 0)
     {
@@ -241,7 +244,7 @@ ColorTriangle(struct Vertex A,
                     GetEdgeFunction(B, C, P) < 0 &&
                     GetEdgeFunction(C, A, P) < 0)
                 {
-                    image.set(P.x, P.y, RED);
+                    image.set(P.x, P.y, color);
                 }
             }
         }
@@ -257,126 +260,42 @@ ColorTriangle(struct Vertex A,
                     GetEdgeFunction(B, C, P) > 0 &&
                     GetEdgeFunction(C, A, P) > 0)
                 {
-                    image.set(P.x, P.y, RED);
+                    image.set(P.x, P.y, color);
                 }
             }
         }
     }
 }
 
-// TODO(tommaso)
-// compute triangle rasterization algorithm
+struct Vector3D
+TriangleGetNormalVector(struct Vertex A,
+                        struct Vertex B,
+                        struct Vertex C)
+{
+    struct Vertex v0 = {C.x - A.x, C.y - A.y, C.z - A.z};
+    struct Vertex v1 = {B.x - A.x, B.y - A.y, B.z - A.z};
 
-// order vertex in ascending y coordinate order
-// struct Triangle
-// order_vertices(struct Triangle triangle)
-// {
-//     struct Vertex v0 = triangle.vertices[0];
-//     struct Vertex v1 = triangle.vertices[1];
-//     struct Vertex v2 = triangle.vertices[2];
-// 
-//     if (v0.components[1] > v1.components[1])
-//     {
-//         swap_vertices(&v0, &v1);
-//     }
-//     if (v0.components[1] > v2.components[1])
-//     {
-//         swap_vertices(&v0, &v2);
-//     }
-//     if (v1.components[1] > v2.components[1])
-//     {
-//         swap_vertices(&v1, &v2);
-//     }
-// 
-//     struct Triangle ordered_triangle = {
-//         v0, v1, v2
-//     };
-// 
-//     return ordered_triangle;
-// }
-// 
-// // TODO(tommaso): bugged
-// // check if the vertices in the triangle are in clockwise or anticlockwise order
-// bool
-// is_clockwise_triangle(struct Triangle triangle)
-// {
-//     struct Vertex v0 = triangle.vertices[0];
-//     struct Vertex v1 = triangle.vertices[1];
-//     struct Vertex v2 = triangle.vertices[2];
-// 
-//     double cross = (v1.components[0] * v2.components[1]) - (v1.components[1] * v2.components[0]);
-//     return cross > 0; 
-// }
-// 
-// double
-// edge_function(struct Vertex v0,
-//               struct Vertex v1,
-//               struct Vertex p)
-// {
-//     int first_term = (v1.components[0] - v0.components[0]) * (p.components[1] - v0.components[1]);
-//     int second_term = (v1.components[1] - v0.components[1]) * (p.components[0] - v0.components[0]);
-//     return first_term - second_term;
-// }
-// 
-// int
-// draw_triangle(struct Triangle triangle,
-//               TGAImage &image)
-// {
-//     triangle = order_vertices(triangle);
-// 
-//     struct Vertex v0 = triangle.vertices[0];
-//     struct Vertex v1 = triangle.vertices[1];
-//     struct Vertex v2 = triangle.vertices[2];
-// 
-//     // TODO: change that
-//     if (false) // if (is_clockwise_triangle(triangle))
-//     {
-//         // look for p such that the three edge_function are all positive
-//         for (int i = 0; i < SCREEN_WIDTH; i++)
-//         {
-//             for (int j = 0; j < SCREEN_HEIGHT; j++)
-//             {
-//                 struct Vertex p;
-//                 p.components[0] = i;
-//                 p.components[1] = j;
-//                 p.components[0] = 0;
-// 
-//                 if (edge_function(v0, v1, p) > 0 &&
-//                     edge_function(v1, v2, p) > 0 &&
-//                     edge_function(v2, v0, p) > 0)
-//                 {
-//                     printf("HERE");
-//                     image.set(i, j, RED);
-//                 }
-//             }
-//         }
-//     }
-//     else
-//     {
-//         // look for p such that the three edge_function are all negative
-//         for (int i = 0; i < SCREEN_WIDTH; i++)
-//         {
-//             for (int j = 0; j < SCREEN_HEIGHT; j++)
-//             {
-//                 struct Vertex p;
-//                 p.components[0] = i;
-//                 p.components[1] = j;
-//                 p.components[0] = 0;
-// 
-//                 if (edge_function(v0, v1, p) < 0 &&
-//                     edge_function(v1, v2, p) < 0 &&
-//                     edge_function(v2, v0, p) < 0)
-//                 {
-//                     image.set(i, j, RED);
-//                 }
-//             }
-//         }
-//     }
-// 
-//     image.write_tga_file("output.tga");
-// 
-//     return 0;
-// }
+    struct Vector3D normal_vector;
 
+    // compute the cross product
+    normal_vector.x =   v0.y * v1.z - v0.z * v1.y;
+    normal_vector.y = -(v0.x * v1.z - v0.z * v1.x);
+    normal_vector.z =   v0.x * v1.y - v0.y * v1.x;
+
+    return normal_vector;
+}
+
+struct Vector3D
+VectorNormalize(struct Vector3D vector)
+{
+    double vector_modulus = sqrt(vector.x * vector.x + 
+                                 vector.y * vector.y +
+                                 vector.z * vector.z);
+    vector.x = vector.x / vector_modulus;
+    vector.y = vector.y / vector_modulus;
+    vector.z = vector.z / vector_modulus;
+
+    return vector;
+}
 
 #endif // DRAWER_CPP

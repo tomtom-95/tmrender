@@ -14,6 +14,13 @@ struct Vertex
     double z;
 };
 
+struct Vector3D
+{
+    double x;
+    double y;
+    double z;
+};
+
 struct VertexBuffer
 {
     struct Vertex *data;
