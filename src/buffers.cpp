@@ -21,6 +21,14 @@ struct Vector3D
     double z;
 };
 
+struct TriangleBoundingBox
+{
+    int x_min;
+    int x_max;
+    int y_min;
+    int y_max;
+};
+
 struct VertexBuffer
 {
     struct Vertex *data;

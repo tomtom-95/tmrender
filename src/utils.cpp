@@ -6,6 +6,7 @@
 #define G (1024 * 1024 * 1024)
 
 const TGAColor WHITE = TGAColor({255, 255, 255, 255});
+const TGAColor BLACK = TGAColor({0,     0,   0,   0});
 
 const TGAColor BLUE  = TGAColor({255,   0,   0,   0});
 const TGAColor GREEN = TGAColor({0,   255,   0,   0});

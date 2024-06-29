@@ -31,6 +31,11 @@ GetEdgeFunction(struct Vertex A,
                 struct Vertex B,
                 struct Vertex C);
 
+struct TriangleBoundingBox
+GetTriangleBoundingBox(struct Vertex A,
+                       struct Vertex B,
+                       struct Vertex C);
+
 void
 ColorTriangle(struct Vertex A,
               struct Vertex B,
@@ -46,6 +51,10 @@ TriangleGetNormalVector(struct Vertex A,
 struct Vector3D
 NormalVectorNormalize(struct Vector3D normal_vector);
 
+void
+ColorWireframeObj(struct FaceBuffer face_buffer,
+                  struct VertexBuffer vertex_buffer,
+                  TGAImage &image);
 
 int
 ScreenCoordsCheck(struct VertexBuffer vertex_buffer)
@@ -223,6 +232,42 @@ GetEdgeFunction(struct Vertex A,
     return (B.x - A.x) * (C.y - A.y) - (B.y - A.y) * (C.x - A.x);
 }
 
+struct TriangleBoundingBox
+GetTriangleBoundingBox(struct Vertex A,
+                       struct Vertex B,
+                       struct Vertex C)
+{
+    struct Vertex vertices[3] = {A, B, C};
+
+    int x_min = A.x;
+    int x_max = A.x;
+    int y_min = A.y;
+    int y_max = A.y;
+
+    for (int i = 1; i < 3; i++)
+    {
+        if (vertices[i].x < x_min)
+        {
+            x_min = vertices[i].x;
+        }
+        if (vertices[i].x > x_max)
+        {
+            x_max = vertices[i].x;
+        }
+        if (vertices[i].y < y_min)
+        {
+            y_min = vertices[i].y;
+        }
+        if (vertices[i].y > y_max)
+        {
+            y_max = vertices[i].y;
+        }
+    }
+
+    struct TriangleBoundingBox bounding_box = {x_min, x_max, y_min, y_max}; 
+    return bounding_box;
+}
+
 void
 ColorTriangle(struct Vertex A,
               struct Vertex B,
@@ -230,14 +275,15 @@ ColorTriangle(struct Vertex A,
               TGAImage &image,
               TGAColor color)
 {
-    // TODO(tommaso): must get a bounding box for the triangle
-    //                now this is slow as fuck
+    struct TriangleBoundingBox bounding_box;
+    bounding_box = GetTriangleBoundingBox(A, B, C);
+
     int edge = GetEdgeFunction(A, B, C);
     if (edge < 0)
     {
-        for (int i = 0; i < SCREEN_HEIGHT; i++)
+        for (int i = bounding_box.x_min; i < bounding_box.x_max; i++)
         {
-            for (int j = 0; j < SCREEN_WIDTH; j++)
+            for (int j = bounding_box.y_min; j < bounding_box.y_max; j++)
             {
                 struct Vertex P = {i, j, 0};
                 if (GetEdgeFunction(A, B, P) < 0 &&
@@ -251,9 +297,9 @@ ColorTriangle(struct Vertex A,
     }
     else
     {
-        for (int i = 0; i < SCREEN_HEIGHT; i++)
+        for (int i = bounding_box.x_min; i < bounding_box.x_max; i++)
         {
-            for (int j = 0; j < SCREEN_WIDTH; j++)
+            for (int j = bounding_box.y_min; j < bounding_box.y_max; j++)
             {
                 struct Vertex P = {i, j, 0};
                 if (GetEdgeFunction(A, B, P) > 0 &&
@@ -296,6 +342,48 @@ VectorNormalize(struct Vector3D vector)
     vector.z = vector.z / vector_modulus;
 
     return vector;
+}
+
+void
+ColorWireframeObj(struct FaceBuffer face_buffer,
+                  struct VertexBuffer vertex_buffer,
+                  TGAImage &image)
+{
+    int light_direction[3] = {0, 0, -1};
+
+    for (size_t i = 0; i < face_buffer.count; i++)
+    {
+        int vertex_idx_0 = (((face_buffer.data + i) -> vertex_indices)[0]) - 1;
+        int vertex_idx_1 = (((face_buffer.data + i) -> vertex_indices)[1]) - 1;
+        int vertex_idx_2 = (((face_buffer.data + i) -> vertex_indices)[2]) - 1;
+
+        struct Vertex v0 = vertex_buffer.data[vertex_idx_0];
+        struct Vertex v1 = vertex_buffer.data[vertex_idx_1];
+        struct Vertex v2 = vertex_buffer.data[vertex_idx_2];
+        
+        struct Vector3D normal_vector = TriangleGetNormalVector(v0, v1, v2);
+        normal_vector = VectorNormalize(normal_vector);
+
+        double intensity = normal_vector.x * light_direction[0] +
+                           normal_vector.y * light_direction[1] +
+                           normal_vector.z * light_direction[2];
+
+        v0 = VertexDenormalize(vertex_buffer.data[vertex_idx_0]);
+        v1 = VertexDenormalize(vertex_buffer.data[vertex_idx_1]);
+        v2 = VertexDenormalize(vertex_buffer.data[vertex_idx_2]);
+
+        if (intensity > 0)
+        {
+            TGAColor color = TGAColor({(uint8_t)(intensity*255),
+                                       (uint8_t)(intensity*255),
+                                       (uint8_t)(intensity*255),
+                                       255});
+            ColorTriangle(v0, v1, v2,
+                          image,
+                          color);
+        }
+    }
+
 }
 
 #endif // DRAWER_CPP

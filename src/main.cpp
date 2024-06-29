@@ -70,42 +70,9 @@ int main(int argc, char** argv)
     //                 face_buffer,
     //                 image,
     //                 WHITE);
-
-    int light_direction[3] = {0, 0, -1};
-
-    for (size_t i = 0; i < face_buffer.count; i++)
-    {
-        int vertex_idx_0 = (((face_buffer.data + i) -> vertex_indices)[0]) - 1;
-        int vertex_idx_1 = (((face_buffer.data + i) -> vertex_indices)[1]) - 1;
-        int vertex_idx_2 = (((face_buffer.data + i) -> vertex_indices)[2]) - 1;
-
-        struct Vertex v0 = vertex_buffer.data[vertex_idx_0];
-        struct Vertex v1 = vertex_buffer.data[vertex_idx_1];
-        struct Vertex v2 = vertex_buffer.data[vertex_idx_2];
-        
-        struct Vector3D normal_vector = TriangleGetNormalVector(v0, v1, v2);
-        normal_vector = VectorNormalize(normal_vector);
-
-        double intensity = normal_vector.x * light_direction[0] +
-                           normal_vector.y * light_direction[1] +
-                           normal_vector.z * light_direction[2];
-
-        v0 = VertexDenormalize(vertex_buffer.data[vertex_idx_0]);
-        v1 = VertexDenormalize(vertex_buffer.data[vertex_idx_1]);
-        v2 = VertexDenormalize(vertex_buffer.data[vertex_idx_2]);
-
-        if (intensity > 0)
-        {
-            TGAColor color = TGAColor({(uint8_t)(intensity*255),
-                                       (uint8_t)(intensity*255),
-                                       (uint8_t)(intensity*255),
-                                       255});
-            ColorTriangle(v0, v1, v2,
-                          image,
-                          color);
-        }
-
-    }
+    ColorWireframeObj(face_buffer,
+                      vertex_buffer,
+                      image);
 
     image.write_tga_file("output.tga");
 
