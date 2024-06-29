@@ -7,76 +7,73 @@
 #include "tgaimage.cpp"
 #include "utils.cpp"
 #include "buffers.cpp"
-// #include "parser.cpp"
-// #include "wireframe_render.cpp"
+#include "parser.cpp"
+#include "drawer.cpp"
 
 
 int main(int argc, char** argv)
 {
-    struct Buffer filebuffer = ReadEntireFile(filename);
-    BufferFree(&filebuffer);
+    struct Buffer file_buffer = ReadEntireFile(filename);
 
-    // size_t vertex_count = 0;
-    // size_t face_count = 0;
-    // size_t buffer_offset = 0;
+    // TODO(tommaso): why allocating G is a problem?
+    // because I am compiling a 32 bit executable
+    // TODO(tommaso): must compile a 64 bit executable
+    // Maybe I have to use compiler at C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.40.33807\bin\Hostx64\x86
+    // TODO(tommaso): for now I allocate memory for 10M veritices and call it a day
+    //                later on I will deal with actually caring more about memory
+    struct VertexBuffer vertex_buffer = VertexBufferAllocate(10 * M);
+    if (!vertex_buffer.data)
+    {
+        return 0;
+    }
+    struct FaceBuffer face_buffer = FaceBufferAlloc(10 * M);
+    if (!face_buffer.data)
+    {
+        return 0;
+    }
+    // TODO(tommaso): the fact that vertex_buffer.count and face_buffer.count is not the actual number
+    //                of vertex and faces is not cool!
 
-    // while (buffer_offset != file_buffer.size)
-    // {
-    //     if (file_buffer.start[buffer_offset] == 'v' &&
-    //         file_buffer.start[buffer_offset + 1] == ' ')
-    //     {
-    //         vertex_count++;
-    //     }
-    //     else if (file_buffer.start[buffer_offset] == 'f')
-    //     {
-    //         face_count++;
-    //     }
+    size_t file_buffer_offset   = 0;
+    size_t vertex_buffer_offset = 0;
+    size_t face_buffer_offset   = 0;
+    size_t line_end_offset      = 0;
+    while (file_buffer_offset < file_buffer.count - 1)
+    {
+        line_end_offset = ReadBufferLine(file_buffer,
+                                         file_buffer_offset);
+        if (*(file_buffer.data + file_buffer_offset) == 'v' &&
+            *(file_buffer.data + file_buffer_offset + 1) == ' ')
+        {
+            ParseVertex(file_buffer, file_buffer_offset,
+                        vertex_buffer, vertex_buffer_offset);
+            vertex_buffer_offset++;
+        }
+        if (*(file_buffer.data + file_buffer_offset) == 'f')
+        {
+            ParseFace(file_buffer, file_buffer_offset,
+                      face_buffer, face_buffer_offset);
+            face_buffer_offset++;
+        }
 
-    //     buffer_offset = read_line_from_buffer(file_buffer,
-    //                                           buffer_offset);
-    // }
+        file_buffer_offset = line_end_offset;
+    }
 
-    // struct VertexBuffer vertex_buffer = vertex_buffer_alloc(vertex_count);
-    // if (vertex_buffer.start == NULL)
-    // {
-    //     printf("Cannot allocate vertex_buffer\n");
-    //     return 1;
-    // }
+    vertex_buffer.count = vertex_buffer_offset;
+    face_buffer.count = face_buffer_offset;
 
-    // struct FaceBuffer face_buffer = face_buffer_alloc(face_count);
-    // if (face_buffer.start == NULL)
-    // {
-    //     printf("Cannot allocate face_buffer\n");
-    //     return 1;
-    // }
+    PrintVertexBuffer(vertex_buffer);
+    PrintFaceBuffer(face_buffer);
 
-    // parse_wavefront_obj(file_buffer,
-    //                     vertex_buffer,
-    //                     vertex_count,
-    //                     face_buffer,
-    //                     face_count);
+    TGAImage image(SCREEN_WIDTH, SCREEN_HEIGHT, TGAImage::RGB);
+    struct Vertex v0 = {100, 100, 0};
+    struct Vertex v1 = {10, 10, 0};
 
-    // // debug_vertex_buffer(vertex_buffer);
-
-    // TGAImage image(SCREEN_WIDTH, SCREEN_HEIGHT, TGAImage::RGB);
-
-    // struct Vertex vertices[3] = {
-    //     vertex_buffer.start[17],
-    //     vertex_buffer.start[18],
-    //     vertex_buffer.start[19],
-    // };
-
-    // struct Triangle triangle;
-    // triangle.vertices[0] = vertices[0];
-    // triangle.vertices[1] = vertices[1];
-    // triangle.vertices[2] = vertices[2];
-
-    // // draw_triangle(triangle,
-    // //               image);
-
+    DrawLine(v0, v1, image, RED);
     // render_wireframe(vertex_buffer,
     //                  face_buffer,
     //                  image,
     //                  WHITE);
+    image.write_tga_file("output.tga");
     return 0;
 }

@@ -7,29 +7,29 @@ struct Buffer
     size_t count;
 };
 
-struct Point3D
+struct Vertex
 {
     double x;
     double y;
     double z;
 };
 
-struct Point3DBuffer
+struct VertexBuffer
 {
-    struct Point3D *data;
+    struct Vertex *data;
     size_t count;
 };
 
-struct TriangleIndices
+struct Face
 {
-    int idx0;
-    int idx1;
-    int idx2;
+    int vertex_indices[3];
+    int texture_indices[3];
+    int normal_indices[3];
 };
 
-struct TriangleIndicesBuffer
+struct FaceBuffer
 {
-    struct TriangleIndices *data;
+    struct Face *data;
     size_t count;
 };
 
@@ -40,24 +40,20 @@ BufferAllocate(size_t count);
 void
 BufferFree(struct Buffer *buffer);
 
-struct Point3DBuffer
-Point3DBufferAllocate(size_t count);
+struct VertexBuffer
+VertexBufferAllocate(size_t count);
 
 void
-Point3DBufferFree(struct Point3DBuffer *buffer);
+VertexBufferFree(struct VertexBuffer *buffer);
 
-struct TriangleIndicesBuffer
-TriangleIndicesBufferAlloc(size_t count);
+struct FaceBuffer
+FaceBufferAlloc(size_t count);
 
 void
-TriangleIndicesBufferFree(struct TriangleIndicesBuffer *buffer);
+FaceBufferFree(struct FaceBuffer *buffer);
 
 struct Buffer
 ReadEntireFile(const char *filename);
-
-// size_t
-// read_line_from_buffer(struct Buffer buffer,
-//                       size_t buffer_offset);
 
 
 struct Buffer
@@ -88,12 +84,12 @@ BufferFree(struct Buffer *buffer)
     *buffer = {};
 }
 
-struct Point3DBuffer
-Point3DBufferAllocate(size_t count)
+struct VertexBuffer
+VertexBufferAllocate(size_t count)
 {
-    struct Point3DBuffer buffer = {};
+    struct VertexBuffer buffer = {};
 
-    buffer.data = (struct Point3D *)malloc(sizeof(*(buffer.data)) * count);
+    buffer.data = (struct Vertex *)malloc(sizeof(*(buffer.data)) * count);
     if (buffer.data)
     {
         buffer.count = count;
@@ -107,7 +103,7 @@ Point3DBufferAllocate(size_t count)
 }
 
 void
-Point3DBufferFree(struct Point3DBuffer *buffer)
+VertexBufferFree(struct VertexBuffer *buffer)
 {
     if (buffer -> data)
     {
@@ -117,12 +113,12 @@ Point3DBufferFree(struct Point3DBuffer *buffer)
 }
 
 
-struct TriangleIndicesBuffer
-TriangleIndicesBufferAlloc(size_t count)
+struct FaceBuffer
+FaceBufferAlloc(size_t count)
 {
-    struct TriangleIndicesBuffer buffer = {};
+    struct FaceBuffer buffer = {};
 
-    buffer.data = (struct TriangleIndices *)malloc(sizeof(*(buffer.data)) * count);
+    buffer.data = (struct Face *)malloc(sizeof(*(buffer.data)) * count);
     if (buffer.data)
     {
         buffer.count = count;
@@ -136,7 +132,7 @@ TriangleIndicesBufferAlloc(size_t count)
 }
 
 void
-TriangleIndicesBufferFree(struct TriangleIndicesBuffer *buffer)
+FaceBufferFree(struct FaceBuffer *buffer)
 {
     if (buffer -> data)
     {
@@ -180,50 +176,5 @@ ReadEntireFile(const char *filename)
     return buffer;
 }
 
-// void swap_vertices(struct Vertex *v0, struct Vertex *v1)
-// {
-//     struct Vertex tmp = *v0;
-//     *v0 = *v1;
-//     *v1 = tmp;
-// }
-// 
-// size_t
-// read_line_from_buffer(struct Buffer buffer,
-//                       size_t buffer_offset)
-// {
-//     for (;;)
-//     {
-//         if (buffer_offset + 1 == buffer.size)
-//         {
-//             return buffer_offset + 1;
-//         }
-// #if _WIN32
-//         else
-//         {
-//             if (buffer.start[buffer_offset] == '\r' &&
-//                 buffer.start[buffer_offset + 1] == '\n')
-//             {
-//                 return buffer_offset + 2;
-//             }
-//             else
-//             {
-//                 buffer_offset++;
-//             }
-//         }
-// #else
-//         else
-//         {
-//             if (buffer.start[buffer_offset] == '\n')
-//             {
-//                 return buffer_offset + 1;
-//             }
-//             else
-//             {
-//                 buffer_offset++;
-//             }
-//         }
-// #endif
-//     }
-// }
 
 #endif // #ifndef BUFFER_CPP

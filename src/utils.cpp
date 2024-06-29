@@ -1,14 +1,18 @@
 #ifndef UTILS_CPP
 #define UTILS_CPP
 
+#define K (1024)
+#define M (1024 * 1024)
+#define G (1024 * 1024 * 1024)
+
 const TGAColor WHITE = TGAColor({255, 255, 255, 255});
 
 const TGAColor BLUE  = TGAColor({255,   0,   0,   0});
 const TGAColor GREEN = TGAColor({0,   255,   0,   0});
 const TGAColor RED   = TGAColor({0,     0, 255,   0});
 
-const int SCREEN_WIDTH = 2000;
-const int SCREEN_HEIGHT = 2000;
+const int SCREEN_WIDTH = 200;
+const int SCREEN_HEIGHT = 200;
 
 const char *filename = "./models/african_head/african_head.obj";
 
