@@ -279,35 +279,16 @@ ColorTriangle(struct Vertex A,
     bounding_box = GetTriangleBoundingBox(A, B, C);
 
     int edge = GetEdgeFunction(A, B, C);
-    if (edge < 0)
+    for (int i = bounding_box.x_min; i < bounding_box.x_max; i++)
     {
-        for (int i = bounding_box.x_min; i < bounding_box.x_max; i++)
+        for (int j = bounding_box.y_min; j < bounding_box.y_max; j++)
         {
-            for (int j = bounding_box.y_min; j < bounding_box.y_max; j++)
+            struct Vertex P = {i, j, 0};
+            if (GetEdgeFunction(A, B, P) > 0 &&
+                GetEdgeFunction(B, C, P) > 0 &&
+                GetEdgeFunction(C, A, P) > 0)
             {
-                struct Vertex P = {i, j, 0};
-                if (GetEdgeFunction(A, B, P) < 0 &&
-                    GetEdgeFunction(B, C, P) < 0 &&
-                    GetEdgeFunction(C, A, P) < 0)
-                {
-                    image.set(P.x, P.y, color);
-                }
-            }
-        }
-    }
-    else
-    {
-        for (int i = bounding_box.x_min; i < bounding_box.x_max; i++)
-        {
-            for (int j = bounding_box.y_min; j < bounding_box.y_max; j++)
-            {
-                struct Vertex P = {i, j, 0};
-                if (GetEdgeFunction(A, B, P) > 0 &&
-                    GetEdgeFunction(B, C, P) > 0 &&
-                    GetEdgeFunction(C, A, P) > 0)
-                {
-                    image.set(P.x, P.y, color);
-                }
+                image.set(P.x, P.y, color);
             }
         }
     }
@@ -372,6 +353,7 @@ ColorWireframeObj(struct FaceBuffer face_buffer,
         v1 = VertexDenormalize(vertex_buffer.data[vertex_idx_1]);
         v2 = VertexDenormalize(vertex_buffer.data[vertex_idx_2]);
 
+        // back face culling: if intensity < 0 do not need to color this triangle
         if (intensity > 0)
         {
             TGAColor color = TGAColor({(uint8_t)(intensity*255),
