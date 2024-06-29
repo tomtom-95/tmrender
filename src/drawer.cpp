@@ -26,20 +26,17 @@ WireframeRender(struct VertexBuffer vertex_buffer,
                 TGAImage &image,
                 TGAColor color);
 
-struct Triangle
-order_vertices(struct Triangle triangle);
-
-bool
-is_clockwise_triangle(struct Triangle triangle);
-
-double
-edge_function(struct Vertex v0,
-              struct Vertex v1,
-              struct Vertex p);
-
 int
-draw_triangle(struct Vertex vertices[3],
-              TGAImage &image);
+GetEdgeFunction(struct Vertex A,
+                struct Vertex B,
+                struct Vertex C);
+
+void
+ColorTriangle(struct Vertex A,
+              struct Vertex B,
+              struct Vertex C,
+              TGAImage &image,
+              TGAColor color);
 
 
 int
@@ -204,6 +201,66 @@ WireframeRender(struct VertexBuffer vertex_buffer,
         DrawLine(v0, v1, image, color);
         DrawLine(v0, v2, image, color);
         DrawLine(v1, v2, image, color);
+    }
+}
+
+int
+GetTriangleDeterminant(struct Vertex v0,
+                       struct Vertex v1,
+                       struct Vertex v2)
+{
+    int determinant = (v1.x * v2.y + v0.x * v1.y + v0.x * v2.x) -
+                      (v0.y * v1.x + v1.y * v2.x + v0.x * v2.y);
+    return determinant;
+}
+
+int
+GetEdgeFunction(struct Vertex A,
+                struct Vertex B,
+                struct Vertex C)
+{
+    return (B.x - A.x) * (C.y - A.y) - (B.y - A.y) * (C.x - A.x);
+}
+
+void
+ColorTriangle(struct Vertex A,
+              struct Vertex B,
+              struct Vertex C,
+              TGAImage &image,
+              TGAColor color)
+{
+    int edge = GetEdgeFunction(A, B, C);
+    if (edge < 0)
+    {
+        for (int i = 0; i < SCREEN_HEIGHT; i++)
+        {
+            for (int j = 0; j < SCREEN_WIDTH; j++)
+            {
+                struct Vertex P = {i, j, 0};
+                if (GetEdgeFunction(A, B, P) < 0 &&
+                    GetEdgeFunction(B, C, P) < 0 &&
+                    GetEdgeFunction(C, A, P) < 0)
+                {
+                    image.set(P.x, P.y, RED);
+                }
+            }
+        }
+    }
+    else
+    {
+        for (int i = 0; i < SCREEN_HEIGHT; i++)
+        {
+            for (int j = 0; j < SCREEN_WIDTH; j++)
+            {
+                struct Vertex P = {i, j, 0};
+                if (GetEdgeFunction(A, B, P) > 0 &&
+                    GetEdgeFunction(B, C, P) > 0 &&
+                    GetEdgeFunction(C, A, P) > 0)
+                {
+                    image.set(P.x, P.y, RED);
+                }
+            }
+        }
     }
 }
 

@@ -66,10 +66,22 @@ int main(int argc, char** argv)
     // PrintFaceBuffer(face_buffer);
 
     TGAImage image(SCREEN_WIDTH, SCREEN_HEIGHT, TGAImage::RGB);
-    WireframeRender(vertex_buffer,
-                    face_buffer,
-                    image,
-                    WHITE);
+    // WireframeRender(vertex_buffer,
+    //                 face_buffer,
+    //                 image,
+    //                 WHITE);
+
+    // Start rasterizing a triangle
+    struct Vertex A = {400, 400, 0};
+    struct Vertex B = {500, 600, 0};
+    struct Vertex C = {600, 400, 0};
+    DrawLine(A, B, image, WHITE);
+    DrawLine(B, C, image, WHITE);
+    DrawLine(C, A, image, WHITE);
+
+    ColorTriangle(A, B, C, image, RED);
+
     image.write_tga_file("output.tga");
+
     return 0;
 }
