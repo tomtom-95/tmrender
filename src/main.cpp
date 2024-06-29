@@ -13,6 +13,7 @@
 
 int main(int argc, char** argv)
 {
+    printf("Hello\n");
     struct Buffer file_buffer = ReadEntireFile(filename);
 
     // TODO(tommaso): why allocating G is a problem?
