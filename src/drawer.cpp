@@ -5,6 +5,16 @@ int
 ScreenCoordsCheck(int x0, int y0, int x1, int y1);
 
 void
+DrawLineLowSteep(int x_start, int y_start, int x_end, int y_end,
+                 TGAImage &image,
+                 TGAColor color);
+
+void
+DrawLineHighSteep(int x_start, int y_start, int x_end, int y_end,
+                  TGAImage &image,
+                  TGAColor color);
+
+void
 DrawLine(struct Vertex v0,
          struct Vertex v1,
          TGAImage &image,
@@ -13,7 +23,7 @@ DrawLine(struct Vertex v0,
 void
 WireframeRender(struct VertexBuffer vertex_buffer,
                 struct FaceBuffer face_buffer,
-                TGAImage image,
+                TGAImage &image,
                 TGAColor color);
 
 struct Triangle
@@ -33,26 +43,99 @@ draw_triangle(struct Vertex vertices[3],
 
 
 int
-ScreenCoordsCheck(int x0, int y0, int x1, int y1)
+ScreenCoordsCheck(struct VertexBuffer vertex_buffer)
 {
-    bool out_of_coords = (x0 < 0 || x0 > SCREEN_WIDTH  ||
-                          y0 < 0 || y0 > SCREEN_HEIGHT ||
-                          x1 < 0 || x1 > SCREEN_WIDTH  ||
-                          y0 < 0 || y0 > SCREEN_HEIGHT);
-    if (out_of_coords == true)
+    for (size_t i = 0; i < vertex_buffer.count; i++)
     {
-        printf("one of the coordinates is out of bounds:\n"
-               "SCREEN_WIDTH=%i\n"
-               "SCREEN_HEIGHT=%i\n"
-               "x0=%i x1=%i y0=%i y1=%i\n\n",
-               SCREEN_WIDTH,
-               SCREEN_HEIGHT,
-               x0, x1, y0, y1);
+        if (vertex_buffer.data[i].x < 0 ||
+            vertex_buffer.data[i].x > SCREEN_WIDTH ||
+            vertex_buffer.data[i].y < 0 ||
+            vertex_buffer.data[i].y > SCREEN_HEIGHT)
+        {
+            printf("coordinates out of bounds\n");
+        }
         return 1;
+    }
+
+    return 0;
+}
+
+struct Vertex
+VertexDenormalize(struct Vertex vertex)
+{
+    vertex.x = (vertex.x + 1.0) * (SCREEN_WIDTH / 2.0);
+    vertex.y = (vertex.y + 1.0) * (SCREEN_HEIGHT / 2.0);
+
+    return vertex;
+}
+
+void
+DrawLineLowSteep(int x_start, int y_start, int x_end, int y_end,
+                 TGAImage &image,
+                 TGAColor color)
+{
+    int dx = x_end - x_start;
+    int dy = y_end - y_start;
+
+    double abs_m = abs(dy / (double)dx);
+    double eps   = 1 - abs_m;
+
+    int increment = 0;
+    if (dy > 0)
+    {
+        increment = 1;
     }
     else
     {
-        return 0;
+        increment = -1;
+    }
+
+    int j = y_start;
+    for (int i = x_start; i < x_end; i++)
+    {
+        if (eps > 1)
+        {
+            j += increment;
+            eps -= 1.0;
+        }
+
+        eps += abs_m;
+        image.set(i, j, color);
+    }
+}
+
+void
+DrawLineHighSteep(int x_start, int y_start, int x_end, int y_end,
+                  TGAImage &image,
+                  TGAColor color)
+{
+    int dx = x_end - x_start;
+    int dy = y_end - y_start;
+
+    double abs_m = abs(dx / (double)dy);
+    double eps   = 1 - abs_m;
+
+    int increment = 0;
+    if (dx > 0)
+    {
+        increment = 1;
+    }
+    else
+    {
+        increment = -1;
+    }
+
+    int i = x_start;
+    for (int j = y_start; j < y_end; j++)
+    {
+        if (eps > 1)
+        {
+            i += increment;
+            eps -= 1.0;
+        }
+
+        eps += abs_m;
+        image.set(i, j, color);
     }
 }
 
@@ -63,59 +146,34 @@ DrawLine(struct Vertex v0,
          TGAImage &image,
          TGAColor color)
 {
-    double dx = v1.x - v0.x;
-    double dy = v1.y - v0.y;
-    double m  = dy / dx;
-
     int x_start = v0.x;
     int y_start = v0.y; 
     int x_end = v1.x;
     int y_end = v1.y;
 
-    double eps = 1 - m;
+    double dx = x_end - x_start;
+    double dy = y_end - y_start;
 
-    if (x_start > x_end)
+    if (abs(dx) > abs(dy))
     {
-        swap_integers(&x_start, &x_end);
-        swap_integers(&y_start, &y_end);
-    }
-
-    if (dx > dy)
-    {
-        int j = y_start;
-        for (int i = x_start; i < x_end; i++)
+        if (x_start < x_end)
         {
-            if (eps > 1)
-            {
-                j++;
-                eps -= 1.0;
-            }
-            else if (eps < 1)
-            {
-                j--;
-                eps += 1.0;
-            }
-            eps += m;
-            image.set(i, j, color);
+            DrawLineLowSteep(x_start, y_start, x_end, y_end, image, color);
+        }
+        else
+        {
+            DrawLineLowSteep(x_end, y_end, x_start, y_start, image, color);
         }
     }
     else
     {
-        int i = x_start;
-        for (int j = y_start; j < y_end; j++)
+        if (y_start < y_end)
         {
-            if (eps > 1)
-            {
-                i++;
-                eps -= 1.0;
-            }
-            else if (eps < 1)
-            {
-                i--;
-                eps += 1.0;
-            }
-            eps += m;
-            image.set(i, j, color);
+            DrawLineHighSteep(x_start, y_start, x_end, y_end, image, color);
+        }
+        else
+        {
+            DrawLineHighSteep(x_end, y_end, x_start, y_start, image, color);
         }
     }
 }
@@ -123,7 +181,7 @@ DrawLine(struct Vertex v0,
 void
 WireframeRender(struct VertexBuffer vertex_buffer,
                 struct FaceBuffer face_buffer,
-                TGAImage image,
+                TGAImage &image,
                 TGAColor color)
 {
     for (size_t i = 0; i < face_buffer.count; i++)
@@ -131,23 +189,21 @@ WireframeRender(struct VertexBuffer vertex_buffer,
         int vertex_idx_0 = (((face_buffer.data + i) -> vertex_indices)[0]) - 1;
         int vertex_idx_1 = (((face_buffer.data + i) -> vertex_indices)[1]) - 1;
         int vertex_idx_2 = (((face_buffer.data + i) -> vertex_indices)[2]) - 1;
+
+        if (i == 0)
+        {
+            printf("v0 = %i\n", vertex_idx_0);
+            printf("v1 = %i\n", vertex_idx_1);
+            printf("v2 = %i\n", vertex_idx_2);
+        }
         
-        struct Vertex v0 = vertex_buffer.data[vertex_idx_0];
-        struct Vertex v1 = vertex_buffer.data[vertex_idx_1];
-        struct Vertex v2 = vertex_buffer.data[vertex_idx_2];
+        struct Vertex v0 = VertexDenormalize(vertex_buffer.data[vertex_idx_0]);
+        struct Vertex v1 = VertexDenormalize(vertex_buffer.data[vertex_idx_1]);
+        struct Vertex v2 = VertexDenormalize(vertex_buffer.data[vertex_idx_2]);
 
-        long double x0 = (v0.x + 1.0) * (SCREEN_WIDTH) / 2.0;
-        long double y0 = (v0.y + 1.0) * (SCREEN_HEIGHT) / 2.0;
-
-        long double x1 = (v1.x + 1.0) * (SCREEN_WIDTH) / 2.0;
-        long double y1 = (v1.y + 1.0) * (SCREEN_HEIGHT) / 2.0;
-
-        long double x2 = (v2.x + 1.0) * (SCREEN_WIDTH) / 2.0;
-        long double y2 = (v2.y + 1.0) * (SCREEN_HEIGHT) / 2.0;
-
-        // DrawLine(x0, y0, x1, y1, image, color);
-        // DrawLine(x0, y0, x2, y2, image, color);
-        // DrawLine(x1, y1, x2, y2, image, color);
+        DrawLine(v0, v1, image, color);
+        DrawLine(v0, v2, image, color);
+        DrawLine(v1, v2, image, color);
     }
 }
 

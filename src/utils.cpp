@@ -11,8 +11,8 @@ const TGAColor BLUE  = TGAColor({255,   0,   0,   0});
 const TGAColor GREEN = TGAColor({0,   255,   0,   0});
 const TGAColor RED   = TGAColor({0,     0, 255,   0});
 
-const int SCREEN_WIDTH = 200;
-const int SCREEN_HEIGHT = 200;
+const int SCREEN_WIDTH = 1000;
+const int SCREEN_HEIGHT = 1000;
 
 const char *filename = "./models/african_head/african_head.obj";
 

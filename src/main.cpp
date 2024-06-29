@@ -13,7 +13,6 @@
 
 int main(int argc, char** argv)
 {
-    printf("Hello\n");
     struct Buffer file_buffer = ReadEntireFile(filename);
 
     // TODO(tommaso): why allocating G is a problem?
@@ -63,18 +62,14 @@ int main(int argc, char** argv)
     vertex_buffer.count = vertex_buffer_offset;
     face_buffer.count = face_buffer_offset;
 
-    PrintVertexBuffer(vertex_buffer);
-    PrintFaceBuffer(face_buffer);
+    // PrintVertexBuffer(vertex_buffer);
+    // PrintFaceBuffer(face_buffer);
 
     TGAImage image(SCREEN_WIDTH, SCREEN_HEIGHT, TGAImage::RGB);
-    struct Vertex v0 = {100, 100, 0};
-    struct Vertex v1 = {10, 10, 0};
-
-    DrawLine(v0, v1, image, RED);
-    // render_wireframe(vertex_buffer,
-    //                  face_buffer,
-    //                  image,
-    //                  WHITE);
+    WireframeRender(vertex_buffer,
+                    face_buffer,
+                    image,
+                    WHITE);
     image.write_tga_file("output.tga");
     return 0;
 }
