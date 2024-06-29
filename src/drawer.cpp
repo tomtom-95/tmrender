@@ -1,5 +1,5 @@
-#ifndef WIREFRAME_RENDER_CPP
-#define WIREFRAME_RENDER_CPP
+#ifndef DRAWER_CPP
+#define DRAWER_CPP
 
 int
 ScreenCoordsCheck(int x0, int y0, int x1, int y1);
@@ -322,4 +322,4 @@ WireframeRender(struct VertexBuffer vertex_buffer,
 // }
 
 
-#endif // WIREFRAME_RENDER_CPP
+#endif // DRAWER_CPP
